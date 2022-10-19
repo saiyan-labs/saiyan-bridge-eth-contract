@@ -62,7 +62,10 @@ contract TokenCustody is Ownable {
 
     // should migrate to multi-signature contracts in the future
     function migrate(address tokenAddress, address newContractAddress) public onlyOwner {
-        Token(tokenAddress).transfer(newContractAddress, Token(tokenAddress).balanceOf(address(this)));
-        payable(newContractAddress).transfer(address(this).balance);
+        if (tokenAddress == address(0)) {
+            payable(newContractAddress).transfer(address(this).balance);
+        } else {
+            Token(tokenAddress).transfer(newContractAddress, Token(tokenAddress).balanceOf(address(this)));
+        }
     }
 }

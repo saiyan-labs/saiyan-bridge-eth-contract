@@ -1,11 +1,12 @@
 pragma solidity ^0.8.9;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-interface Token is IERC20 {}
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract TokenCustody is Ownable {
+    using SafeERC20 for ERC20;
+
     bool public IsFrozen;
     mapping(bytes32 => bool) internal _unlocked;
 
@@ -30,7 +31,7 @@ contract TokenCustody is Ownable {
             emit Locked(msg.value, tokenAddress, aptosAddress, msg.sender);
         } else {
             require(amount != 0, "no tokens sent");
-            Token(tokenAddress).transferFrom(msg.sender, address(this), amount);
+            ERC20(tokenAddress).safeTransferFrom(msg.sender, address(this), amount);
             emit Locked(amount, tokenAddress, aptosAddress, msg.sender);
         }
     }
@@ -47,7 +48,7 @@ contract TokenCustody is Ownable {
             payable(ethereumAddress).transfer(amount);
             emit Unlocked(amount, tokenAddress, ethereumAddress, aptosHash);
         } else {
-            Token(tokenAddress).transfer(ethereumAddress, amount);
+            ERC20(tokenAddress).safeTransfer(ethereumAddress, amount);
             emit Unlocked(amount, tokenAddress, ethereumAddress, aptosHash);
         }
     }
@@ -65,7 +66,7 @@ contract TokenCustody is Ownable {
         if (tokenAddress == address(0)) {
             payable(newContractAddress).transfer(address(this).balance);
         } else {
-            Token(tokenAddress).transfer(newContractAddress, Token(tokenAddress).balanceOf(address(this)));
+            ERC20(tokenAddress).safeTransfer(newContractAddress, ERC20(tokenAddress).balanceOf(address(this)));
         }
     }
 }
